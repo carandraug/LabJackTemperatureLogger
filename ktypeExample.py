@@ -1,4 +1,7 @@
-from time import sleep
+#!/usr/bin/env python
+
+import math
+import time
 
 import u6
 
@@ -152,7 +155,6 @@ def tempCToMVolts(tempC):
     coeffs = tempToVoltsConstants(tempC)
     if hasattr(coeffs, "extended"):
         a0, a1, a2 = coeffs.extended
-        import math
         extendedCalc = a0 * math.exp(a1 * (tempC - a2) * (tempC - a2))
         return evaluatePolynomial(coeffs, tempC) + extendedCalc
     else:
@@ -163,23 +165,22 @@ def mVoltsToTempC(mVolts):
     return evaluatePolynomial(coeffs, mVolts)
 
 
-
 if __name__ == '__main__':
     d = u6.U6()
-    
+
     for i in range(10):
         # The cold junction temperature
         # Important: Must be in Celsius
         CJTEMPinC = d.getTemperature() + 2.5 - 273.15
-        
+
         # The thermocouple's analog voltage
         # Important: Must be in millivolts
         TCmVolts = d.getAIN(0, resolutionIndex = 8, gainIndex = 3) * 1000
-        
+
         print "Cold Junction Temp:", CJTEMPinC
         print "Voltage (in milivolts):", TCmVolts
-        
+
         totalMVolts = TCmVolts + tempCToMVolts(CJTEMPinC)
-        
+
         print "Temperature:", mVoltsToTempC(totalMVolts)
-        sleep(1)
+        time.sleep(1)
