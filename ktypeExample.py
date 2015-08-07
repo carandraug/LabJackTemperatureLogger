@@ -175,7 +175,7 @@ if __name__ == '__main__':
 
         # The thermocouple's analog voltage
         # Important: Must be in millivolts
-        TCmVolts = d.getAIN(0, resolutionIndex = 8, gainIndex = 3) * 1000
+        TCmVolts = d.getAIN(1, resolutionIndex = 8, gainIndex = 3) * 1000
 
         print "Cold Junction Temp:", CJTEMPinC
         print "Voltage (in milivolts):", TCmVolts
