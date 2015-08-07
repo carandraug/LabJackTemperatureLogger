@@ -33,8 +33,6 @@ class DataHandler(StartStopThread):
         self.nCols = cols
         # max numer of lines in the log file before rotating
         self.max_log_size = max_log_size
-        # Maximum points in view.
-        self.historyLength = history
         # Queue for incoming data.
         self.queue = deque()
         # Lock on queue.
@@ -62,7 +60,7 @@ class DataHandler(StartStopThread):
         while self.runFlag:
             # Create the log file.#
             fileName = time.strftime(self.fileSettings.get('filenameStr'),
-                                     time.localtime()))
+                                     time.localtime())
             filePath = os.path.join('/var/lib/LabJackTemperatureLogger',
                                     fileName)
 
