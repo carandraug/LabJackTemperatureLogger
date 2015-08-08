@@ -43,6 +43,21 @@ class DataHandler(StartStopThread):
         with self.lock:
             self.queue.append(data)
 
+    def create_log_file(self):
+        fileName = time.strftime(self.fileSettings.get('filenameStr'),
+                                 time.localtime())
+        filePath = os.path.join('/var/lib/LabJackTemperatureLogger',
+                                fileName)
+
+        headings = self.fileSettings.get('headings')
+        if headings:
+            with open(fileName, 'w') as fh:
+                fstr = '%s \t' * len(headings)
+                fh.write(fstr % tuple(headings))
+                fh.write('\n')
+
+        return filePath
+
     def run(self):
         """DataHandler main loop."""
         # Clear stale data from the queue.
@@ -57,37 +72,29 @@ class DataHandler(StartStopThread):
         elif not formatStr.endswith('\n'):
             formatStr += '\n'
 
+        filePath = self.create_log_file()
+        nlines = 0
         while self.runFlag:
-            # Create the log file.#
-            fileName = time.strftime(self.fileSettings.get('filenameStr'),
-                                     time.localtime())
-            filePath = os.path.join('/var/lib/LabJackTemperatureLogger',
-                                    fileName)
+            if len(self.queue) == 0:
+                # No data to process. Wait then skip to next iteration.
+                time.sleep(1)
+                continue
 
-            headings = self.fileSettings.get('headings')
-            if headings:
-                with open(fileName, 'w') as fh:
-                    fstr = '%s \t' * len(headings)
-                    fh.write(fstr % tuple(headings))
-                    fh.write('\n')
+            if nlines > self.max_log_size:
+                filePath = self.create_log_file()
+                nlines = 0
 
-            nlines = 0
-            while nlines < self.max_log_size:
-                nlines+=1
-                if len(self.queue) == 0:
-                    # No data to process. Wait then skip to next iteration.
-                    time.sleep(1)
-                    continue
-
-                # There is data to process.
-                # Fetch oldest point in queue.
-                with self.lock:
-                    newData = self.queue.popleft()
-                # Throw away extra columns.
-                newData[nCols:] = []
-                # Log data to file.
-                with open(fileName, 'a') as fh:
-                    fh.write(formatStr % newData)
+            # There is data to process.
+            # Fetch oldest point in queue.
+            with self.lock:
+                newData = self.queue.popleft()
+            # Throw away extra columns.
+            if len(newData) > nCols:
+                newData = newData[:nCols]
+            # Log data to file.
+            with open(filePath, 'a') as fh:
+                fh.write(formatStr % newData)
+            nlines+=1
 
 
 class Acquirer(StartStopThread):
@@ -119,6 +126,7 @@ class Acquirer(StartStopThread):
                     data = (data,)
                 self.callbackFunc(tNow, *data)
             time.sleep(0.01)
+
 
 def test():
     import random

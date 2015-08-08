@@ -75,10 +75,11 @@ def main():
     daq = daqlog.Acquirer(LOGRATE/1000., source.readTemperature, logger.addToQueue)
     daq.start()
 
+    while 1:
+        time.sleep(1)
+
     logger.stopAndJoin()
     daq.stopAndJoin()
-    plotterLong.stopAndJoin()
-    plotterShort.stopAndJoin()
 
 if __name__ == '__main__':
     main()
